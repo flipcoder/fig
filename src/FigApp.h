@@ -1,0 +1,43 @@
+#ifndef APP_H_KS24XFVM
+#define APP_H_KS24XFVM
+
+#include <QtGui>
+#include <QtWidgets>
+#include <memory>
+#include <QSystemTrayIcon>
+#include "FigWindow.h"
+#include "kit/args/args.h"
+#include "kit/meta/meta.h"
+
+class FigApp:
+    public QApplication
+{
+    Q_OBJECT
+    
+    public:
+
+        FigApp(int& argc, char* argv[]);
+
+        FigApp(const FigApp&) = default;
+        FigApp(FigApp&&) = default;
+        FigApp& operator=(const FigApp&) = default;
+        FigApp& operator=(FigApp&&) = default;
+
+        virtual ~FigApp();
+        
+        bool event(QEvent* event) override;
+
+    private Q_SLOTS:
+        
+        void quit();
+        
+    private:
+
+        Args m_Args;
+        std::string m_FigAppPath;
+        
+        std::unique_ptr<FigWindow> m_pWindow;
+};
+
+#endif
+
