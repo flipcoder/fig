@@ -8,6 +8,7 @@
 #include "FigWindow.h"
 #include "kit/args/args.h"
 #include "kit/meta/meta.h"
+#include "kit/meta/schema.h"
 
 class FigApp:
     public QApplication
@@ -26,6 +27,7 @@ class FigApp:
         virtual ~FigApp();
         
         bool event(QEvent* event) override;
+        bool failed() const { return not m_Success; }
 
     private Q_SLOTS:
         
@@ -34,9 +36,17 @@ class FigApp:
     private:
 
         Args m_Args;
+        
         std::string m_FigAppPath;
         
+        std::string m_SettingsFn;
+        std::string m_SchemaFn;
+        std::shared_ptr<Meta> m_Settings;
+        std::shared_ptr<Schema> m_Schema;
+        
         std::unique_ptr<FigWindow> m_pWindow;
+
+        bool m_Success = false;
 };
 
 #endif

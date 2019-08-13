@@ -2,7 +2,7 @@ TEMPLATE = app
 DESTDIR  = bin/
 HEADERS += src/*.h
 SOURCES += src/*.cpp lib/kit/kit/log/*.cpp lib/kit/kit/args/*.cpp
-INCLUDEPATH += lib/kit/
+INCLUDEPATH += lib/kit/ lib/kit/lib/local_shared_ptr
 LIBS += -L/usr/local/lib \
     -lpthread \
     -lboost_thread \
