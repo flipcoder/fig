@@ -1,0 +1,6 @@
+bin/
+lib/
+moc/
+obj/
+.qmake.stash
+Makefile
