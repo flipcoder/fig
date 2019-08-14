@@ -48,6 +48,49 @@ FigApp :: ~FigApp()
 {
 }
 
+string FigApp :: as_string(std::shared_ptr<Meta> m, string key)
+{
+    string r;
+    try{
+        r = m->at<string>(key);
+    }catch(...){
+        try{
+            r = to_string(m->at<int>(key));
+        }catch(...){
+            try{
+                r = to_string(m->at<double>(key));
+            }catch(...){
+                try{
+                    r = m->at<bool>(key) ? "true" : "false";
+                }catch(...){}
+            }
+        }
+    }
+    return r;
+}
+
+string FigApp :: as_string(const MetaElement& me)
+{
+    string r;
+    try{
+        r = me.as<string>();
+    }catch(...){
+        try{
+            r = to_string(me.as<int>());
+        }catch(...){
+            try{
+                r = to_string(me.as<double>());
+            }catch(...){
+                try{
+                    r = me.as<bool>() ? "true" : "false";
+                }catch(...){}
+            }
+        }
+    }
+    return r;
+
+}
+
 void FigApp :: init()
 {
     m_pWindow = make_unique<FigWindow>(this);
@@ -60,6 +103,31 @@ void FigApp :: init()
     //layout->addWidget(button2);
     //m_pWindow->setLayout(layout);
     //m_pWindow->setCentralWidget(widget);
+
+    if(m_pSchema->has(".icon")){
+        auto icon = m_pSchema->at<string>(".icon");
+        QImage image;
+        image.load(icon.c_str());
+        auto label = new QLabel();
+        auto pm = QPixmap::fromImage(image);
+        pm = pm.scaled(QSize(
+            m_pSchema->at<int>(".icon-width",128),
+            m_pSchema->at<int>(".icon-height",128)
+        ), Qt::KeepAspectRatio);
+        label->setPixmap(pm);
+        label->setAlignment(Qt::AlignCenter);
+        layout->addWidget(label);
+    }
+    
+    if(m_pSchema->has(".header")){
+        auto header = m_pSchema->at<string>(".header");
+        auto label = new QLabel(header.c_str());
+        label->setTextFormat(Qt::RichText);
+        label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+        label->setOpenExternalLinks(true);
+        label->setAlignment(Qt::AlignCenter);
+        layout->addWidget(label);
+    }
 
     for(auto&& category: *m_pSchema)
     {
@@ -99,27 +167,14 @@ void FigApp :: init()
             try{
                 vals = op->meta(".values");
             }catch(...){} // no values? leave null
-            int i=0;
+            string def = as_string(op, ".default");
+
             if(vals)
             {
                 // if values exist, use a combobox
+                int i=0;
                 for(auto&& val: *vals){
-                    string v;
-                    try{
-                        v = val.as<string>();
-                    }catch(...){
-                        try{
-                            v = to_string(val.as<int>());
-                        }catch(...){
-                            try{
-                                v = to_string(val.as<double>());
-                            }catch(...){
-                                try{
-                                    v = val.as<bool>() ? "true" : "false";
-                                }catch(...){}
-                            }
-                        }
-                    }
+                    string v = as_string(val);
                     if(not v.empty()){
                         QVariant qi = i;
                         if(ops)
@@ -154,11 +209,11 @@ void FigApp :: init()
             }
             else
             {
-                string def;
-                try{
-                    def = op->at<string>(".default");
-                }catch(...){
-                }
+                //string def;
+                //try{
+                //    def = op->at<string>(".default");
+                //}catch(...){
+                //}
                 // field
                 group_layout->addRow(
                     new QLabel((option_name).c_str()),
@@ -170,8 +225,20 @@ void FigApp :: init()
         layout->addWidget(group);
     }
     
-    auto okcancel = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    if(m_pSchema->has(".footer")){
+        auto footer = m_pSchema->at<string>(".footer");
+        auto label = new QLabel(footer.c_str());
+        label->setTextFormat(Qt::RichText);
+        label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+        label->setOpenExternalLinks(true);
+        label->setAlignment(Qt::AlignCenter);
+        layout->addWidget(label);
+    }
+    
+    auto okcancel = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults);
     layout->addWidget(okcancel);
+    connect(okcancel->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(restore_defaults()));
+    connect(okcancel->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(save_and_quit()));
     connect(okcancel->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(quit()));
     
     m_pWindow->setLayout(layout);
@@ -184,6 +251,18 @@ bool FigApp :: event(QEvent* ev)
     return QApplication::event(ev);
 }
 
+void FigApp :: restore_defaults()
+{
+    LOG("restore_defaults");
+}
+
+void FigApp :: save_and_quit()
+{
+    // TODO: save
+    LOG("save_and_quit");
+    QApplication::quit();
+}
+    
 void FigApp :: quit()
 {
     QApplication::quit();

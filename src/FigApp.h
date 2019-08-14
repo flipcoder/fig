@@ -30,9 +30,14 @@ class FigApp:
         bool failed() const { return not m_Success; }
         void init();
 
+        static std::string as_string(std::shared_ptr<Meta> m, std::string key);
+        static std::string as_string(const MetaElement& me);
+
     private Q_SLOTS:
         
         void quit();
+        void save_and_quit();
+        void restore_defaults();
         
     private:
 
