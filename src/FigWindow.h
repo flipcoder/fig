@@ -1,14 +1,14 @@
 #ifndef FIGWINDOW_H_Q0YWXBJS
 #define FIGWINDOW_H_Q0YWXBJS
 
-#include <QMainWindow>
+#include <QDialog>
 #include "ui_fig.h"
 #include "kit/meta/meta.h"
 
 class FigApp;
 
 class FigWindow:
-    public QMainWindow
+    public QDialog
 {
     Q_OBJECT
         
@@ -23,11 +23,15 @@ class FigWindow:
         FigWindow& operator=(FigWindow&&) = default;
 
         FigApp* m_pApp;
-        Ui::Fig m_UI;
+        //Ui::Fig m_UI;
+
+        //bool failed() const { return not m_bSuccess; }
         
     protected:
         
         void closeEvent(QCloseEvent* ev);
+
+        //bool m_bSuccess = false;
 };
 
 #endif

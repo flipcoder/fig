@@ -28,6 +28,7 @@ class FigApp:
         
         bool event(QEvent* event) override;
         bool failed() const { return not m_Success; }
+        void init();
 
     private Q_SLOTS:
         
@@ -41,8 +42,9 @@ class FigApp:
         
         std::string m_SettingsFn;
         std::string m_SchemaFn;
-        std::shared_ptr<Meta> m_Settings;
-        std::shared_ptr<Schema> m_Schema;
+        std::shared_ptr<Meta> m_pSettings;
+        std::shared_ptr<Meta> m_pSchema;
+        std::string m_Title;
         
         std::unique_ptr<FigWindow> m_pWindow;
 

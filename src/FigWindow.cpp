@@ -4,7 +4,7 @@ using namespace std;
 FigWindow :: FigWindow(FigApp* app):
     m_pApp(app)
 {
-    m_UI.setupUi(this);
+    //m_UI.setupUi(this);
     //m_UI.taskList->setShowGrid(false);
     //m_UI.taskList->setContextMenuPolicy(Qt::CustomContextMenu);
     //connect(
@@ -13,7 +13,7 @@ FigWindow :: FigWindow(FigApp* app):
     //    app,
     //    SLOT(ctxMenu(const QPoint&))
     //);
-    show();
+    //show();
 }
 
 FigWindow :: ~FigWindow()
