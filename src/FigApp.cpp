@@ -169,29 +169,48 @@ void FigApp :: init()
             }catch(...){} // no values? leave null
             string def = as_string(op, ".default");
 
+            // check if values are bools
+            bool bools = false;
             if(vals)
             {
+                int i;
+                int vsz = vals->size();
+                for(i=0;i<vsz;++i){
+                    try{
+                        vals->at<bool>(i);
+                    }catch(...){break;} // not a bool, fail
+                    if(i==vsz-1)
+                       bools = true; // all values are bools
+                }
+            }
+
+            if(bools)
+            {
+                group_layout->addRow(new QLabel(option_name.c_str()), new QCheckBox);
+            }
+            else if(vals)
+            {
                 // if values exist, use a combobox
-                int i=0;
+                int j=0;
                 for(auto&& val: *vals){
                     string v = as_string(val);
                     if(not v.empty()){
-                        QVariant qi = i;
+                        QVariant qj = j;
                         if(ops)
                         {
                             try{
-                                box->addItem(tr(ops->at<string>(i).c_str()), qi);
+                                box->addItem(tr(ops->at<string>(j).c_str()), qj);
                             }catch(...){
-                                box->addItem(tr(v.c_str()), qi);
+                                box->addItem(tr(v.c_str()), qj);
                             }
                         }
                         else
                         {
-                            box->addItem(tr(v.c_str()), qi);
+                            box->addItem(tr(v.c_str()), qj);
                         }
                     }
                     
-                    ++i;
+                    ++j;
                 }
                 group_layout->addRow(new QLabel(option_name.c_str()), box);
             }
