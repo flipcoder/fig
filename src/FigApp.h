@@ -32,6 +32,8 @@ class FigApp:
 
         static std::string as_string(std::shared_ptr<Meta> m, std::string key);
         static std::string as_string(const MetaElement& me);
+        void save();
+        void load();
 
     private Q_SLOTS:
         

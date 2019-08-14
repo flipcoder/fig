@@ -98,6 +98,7 @@ void FigApp :: init()
     //QPushButton *button1 = new QPushButton("One");
     //QPushButton *button2 = new QPushButton("Two");
     QVBoxLayout* layout = new QVBoxLayout;
+    layout->setObjectName("layout");
     //auto widget = new QWidget();
     //layout->addWidget(button1);
     //layout->addWidget(button2);
@@ -146,7 +147,10 @@ void FigApp :: init()
             category_name = category.key;
         }
         auto group = new QGroupBox(category_name.c_str());
+        group->setObjectName(category.key.c_str());
+        
         auto group_layout = new QFormLayout;
+        group_layout->setObjectName("group_layout");
         for(auto&& option: *sp){
             shared_ptr<Meta> op;
             try {
@@ -214,7 +218,7 @@ void FigApp :: init()
                 }
                 group_layout->addRow(new QLabel(option_name.c_str()), box);
             }
-            else if(op->has(".max"))
+            else if(op->has(".range"))
             {
                 // slider
                 string suffix;
@@ -224,6 +228,22 @@ void FigApp :: init()
                 if(not suffix.empty())
                     option_name += " ("+suffix+")";
                 auto slider = new QSlider(Qt::Horizontal);
+                slider->setTickPosition(QSlider::TicksBothSides);
+                auto range = op->meta(".range");
+                slider->setMinimum(range->at<int>(0));
+                slider->setMaximum(range->at<int>(1));
+                if(op->has(".step")){
+                    try{
+                        slider->setSingleStep(op->at<int>(".step"));
+                        try{
+                            slider->setTickInterval(op->at<int>(".interval"));
+                        }catch(...){
+                            slider->setTickInterval(op->at<int>(".step"));
+                        }
+                    }catch(...){
+                    }
+                }
+                slider->setValue(std::stoi(def));
                 group_layout->addRow(new QLabel((option_name).c_str()), slider);
             }
             else
@@ -262,7 +282,20 @@ void FigApp :: init()
     
     m_pWindow->setLayout(layout);
     m_pWindow->setWindowTitle(m_Title.c_str());
+
+    load();
+    
     m_pWindow->show();
+}
+
+void FigApp :: save()
+{
+    
+}
+
+void FigApp :: load()
+{
+    
 }
 
 bool FigApp :: event(QEvent* ev)
@@ -279,6 +312,7 @@ void FigApp :: save_and_quit()
 {
     // TODO: save
     LOG("save_and_quit");
+    save();
     QApplication::quit();
 }
     
