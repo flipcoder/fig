@@ -94,45 +94,65 @@ void FigApp :: init()
             shared_ptr<Meta> vals;
             try{
                 vals = op->meta(".values");
-            }catch(...){continue;} // no values? leave null
+            }catch(...){} // no values? leave null
             int i=0;
-            for(auto&& val: *vals){
-                string v;
-                try{
-                    v = val.as<string>();
-                }catch(...){
+            if(vals)
+            {
+                // if values exist, use a combobox
+                for(auto&& val: *vals){
+                    string v;
                     try{
-                        v = to_string(val.as<int>());
+                        v = val.as<string>();
                     }catch(...){
                         try{
-                            v = to_string(val.as<double>());
+                            v = to_string(val.as<int>());
                         }catch(...){
                             try{
-                                v = val.as<bool>() ? "true" : "false";
+                                v = to_string(val.as<double>());
                             }catch(...){
+                                try{
+                                    v = val.as<bool>() ? "true" : "false";
+                                }catch(...){
+                                }
                             }
                         }
                     }
-                }
-                if(not v.empty()){
-                    QVariant qi = i;
-                    if(ops)
-                    {
-                        try{
-                            box->addItem(tr(ops->at<string>(i).c_str()), qi);
-                        }catch(...){
+                    if(not v.empty()){
+                        QVariant qi = i;
+                        if(ops)
+                        {
+                            try{
+                                box->addItem(tr(ops->at<string>(i).c_str()), qi);
+                            }catch(...){
+                                box->addItem(tr(v.c_str()), qi);
+                            }
+                        }
+                        else
+                        {
                             box->addItem(tr(v.c_str()), qi);
                         }
                     }
-                    else
-                    {
-                        box->addItem(tr(v.c_str()), qi);
-                    }
+                    
+                    ++i;
                 }
-                
-                ++i;
+                group_layout->addRow(new QLabel(option_name.c_str()), box);
             }
-            group_layout->addRow(new QLabel(option_name.c_str()), box);
+            else if(op->has(".max"))
+            {
+                // slider
+                string suffix;
+                try{
+                    suffix = op->at<string>(".suffix");
+                }catch(...){}
+                if(not suffix.empty())
+                    option_name += " ("+suffix+")";
+                auto slider = new QSlider(Qt::Horizontal);
+                group_layout->addRow(new QLabel((option_name).c_str()), slider);
+            }
+            else
+            {
+                // field
+            }
         }
         group->setLayout(group_layout);
         layout->addWidget(group);
