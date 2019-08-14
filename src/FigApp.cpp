@@ -69,6 +69,8 @@ void FigApp :: init()
         }catch(...){continue;} // not a category
         if(sp->empty())
             continue;
+        if(not sp->at<bool>(".visible", true))
+            continue; // category not visible
         string category_name;
         try{
             category_name = sp->at<string>(".name");
@@ -82,6 +84,8 @@ void FigApp :: init()
             try {
                 op = option.as<shared_ptr<Meta>>();
             }catch(...){continue;} // not an option
+            if(not op->at<bool>(".visible", true))
+                continue; // option not visible
             string option_name;
             try {
                 option_name = op->at<string>(".name");
@@ -112,8 +116,7 @@ void FigApp :: init()
                             }catch(...){
                                 try{
                                     v = val.as<bool>() ? "true" : "false";
-                                }catch(...){
-                                }
+                                }catch(...){}
                             }
                         }
                     }
@@ -151,14 +154,25 @@ void FigApp :: init()
             }
             else
             {
+                string def;
+                try{
+                    def = op->at<string>(".default");
+                }catch(...){
+                }
                 // field
+                group_layout->addRow(
+                    new QLabel((option_name).c_str()),
+                    new QLineEdit(def.c_str())
+                );
             }
         }
         group->setLayout(group_layout);
         layout->addWidget(group);
     }
     
-    layout->addWidget(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel));
+    auto okcancel = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    layout->addWidget(okcancel);
+    connect(okcancel->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(quit()));
     
     m_pWindow->setLayout(layout);
     m_pWindow->setWindowTitle(m_Title.c_str());

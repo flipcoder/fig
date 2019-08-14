@@ -5,7 +5,7 @@ fig
 
 Copyright (c) Grady O'Connell, 2016
 
-Generates GUI configuration dialogs from JSON schema
+Build configuration dialogs using simple JSON
 
 Status: Just started. Not much here yet.
 
