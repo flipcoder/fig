@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'fig.ui'
 **
-** Created by: Qt User Interface Compiler version 5.7.0
+** Created by: Qt User Interface Compiler version 5.13.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,10 +10,7 @@
 #define UI_FIG_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QStatusBar>
@@ -31,17 +28,17 @@ public:
     void setupUi(QMainWindow *Fig)
     {
         if (Fig->objectName().isEmpty())
-            Fig->setObjectName(QStringLiteral("Fig"));
+            Fig->setObjectName(QString::fromUtf8("Fig"));
         Fig->resize(800, 600);
         centralwidget = new QWidget(Fig);
-        centralwidget->setObjectName(QStringLiteral("centralwidget"));
+        centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         Fig->setCentralWidget(centralwidget);
         menubar = new QMenuBar(Fig);
-        menubar->setObjectName(QStringLiteral("menubar"));
+        menubar->setObjectName(QString::fromUtf8("menubar"));
         menubar->setGeometry(QRect(0, 0, 800, 22));
         Fig->setMenuBar(menubar);
         statusbar = new QStatusBar(Fig);
-        statusbar->setObjectName(QStringLiteral("statusbar"));
+        statusbar->setObjectName(QString::fromUtf8("statusbar"));
         Fig->setStatusBar(statusbar);
 
         retranslateUi(Fig);
@@ -51,7 +48,7 @@ public:
 
     void retranslateUi(QMainWindow *Fig)
     {
-        Fig->setWindowTitle(QApplication::translate("Fig", "Fig", 0));
+        Fig->setWindowTitle(QCoreApplication::translate("Fig", "Fig", nullptr));
     } // retranslateUi
 
 };

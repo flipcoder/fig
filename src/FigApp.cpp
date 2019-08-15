@@ -98,7 +98,7 @@ void FigApp :: init()
     //QPushButton *button1 = new QPushButton("One");
     //QPushButton *button2 = new QPushButton("Two");
     QVBoxLayout* layout = new QVBoxLayout;
-    layout->setObjectName("layout");
+    //layout->setObjectName("layout");
     //auto widget = new QWidget();
     //layout->addWidget(button1);
     //layout->addWidget(button2);
@@ -146,11 +146,14 @@ void FigApp :: init()
         }catch(...){
             category_name = category.key;
         }
+        
+        auto& option_map = m_LabelMap[category.key] = map<string,QLabel*>();
+        
         auto group = new QGroupBox(category_name.c_str());
-        group->setObjectName(category.key.c_str());
+        //group->setObjectName(category.key.c_str());
         
         auto group_layout = new QFormLayout;
-        group_layout->setObjectName("group_layout");
+        group_layout->setObjectName(category.key.c_str());
         for(auto&& option: *sp){
             shared_ptr<Meta> op;
             try {
@@ -162,7 +165,6 @@ void FigApp :: init()
             try {
                 option_name = op->at<string>(".name");
             }catch(...){continue;} // no name
-            auto box = new QComboBox;
             shared_ptr<Meta> ops;
             try{
                 ops = op->meta(".options");
@@ -172,6 +174,19 @@ void FigApp :: init()
                 vals = op->meta(".values");
             }catch(...){} // no values? leave null
             string def = as_string(op, ".default");
+            MetaType::ID typid = MetaType::ID::STRING;
+            try {
+                typid = op->type_id(".default");
+            }catch(...){}
+            string typ;
+            if(typid==MetaType::ID::STRING)
+                typ="string";
+            else if(typid==MetaType::ID::INT)
+                typ="int";
+            else if(typid==MetaType::ID::REAL)
+                typ="double";
+            else if(typid==MetaType::ID::BOOL)
+                typ="bool";
 
             // check if values are bools
             bool bools = false;
@@ -184,20 +199,31 @@ void FigApp :: init()
                         vals->at<bool>(i);
                     }catch(...){break;} // not a bool, fail
                     if(i==vsz-1)
-                       bools = true; // all values are bools
+                        bools = true; // all values are bools
                 }
             }
 
+            
             if(bools)
             {
-                group_layout->addRow(new QLabel(option_name.c_str()), new QCheckBox);
+                auto cb = new QCheckBox;
+                auto label = new QLabel(option_name.c_str());
+                label->setObjectName(option.key.c_str());
+                label->setProperty("type", typ.c_str());
+                option_map[option.key] = label;
+                group_layout->addRow(label, cb);
             }
             else if(vals)
             {
+                auto box = new QComboBox;
+                box->setObjectName("box");
                 // if values exist, use a combobox
                 int j=0;
                 for(auto&& val: *vals){
                     string v = as_string(val);
+                    
+                    
+                    
                     if(not v.empty()){
                         QVariant qj = j;
                         if(ops)
@@ -216,7 +242,11 @@ void FigApp :: init()
                     
                     ++j;
                 }
-                group_layout->addRow(new QLabel(option_name.c_str()), box);
+                auto label = new QLabel(option_name.c_str());
+                label->setObjectName(option.key.c_str());
+                label->setProperty("type", typ.c_str());
+                option_map[option.key] = label;
+                group_layout->addRow(label, box);
             }
             else if(op->has(".range"))
             {
@@ -244,7 +274,11 @@ void FigApp :: init()
                     }
                 }
                 slider->setValue(std::stoi(def));
-                group_layout->addRow(new QLabel((option_name).c_str()), slider);
+                auto label = new QLabel((option_name).c_str());
+                label->setObjectName(option_name.c_str());
+                label->setProperty("type", typ.c_str());
+                option_map[option.key] = label;
+                group_layout->addRow(label, slider);
             }
             else
             {
@@ -254,9 +288,15 @@ void FigApp :: init()
                 //}catch(...){
                 //}
                 // field
+                auto le = new QLineEdit(def.c_str());
+                LOG(option.key);
+                auto label = new QLabel(option_name.c_str());
+                label->setObjectName(option.key.c_str());
+                label->setProperty("type", typ.c_str());
+                option_map[option.key] = label;
                 group_layout->addRow(
-                    new QLabel((option_name).c_str()),
-                    new QLineEdit(def.c_str())
+                    label,
+                    le
                 );
             }
         }
@@ -276,7 +316,7 @@ void FigApp :: init()
     
     auto okcancel = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults);
     layout->addWidget(okcancel);
-    connect(okcancel->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(restore_defaults()));
+    connect(okcancel->button(QDialogButtonBox::RestoreDefaults), SIGNAL(clicked()), this, SLOT(restore_defaults()));
     connect(okcancel->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(save_and_quit()));
     connect(okcancel->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(quit()));
     
@@ -295,7 +335,15 @@ void FigApp :: save()
 
 void FigApp :: load()
 {
-    
+    LOG("load");
+    for(auto&& c: m_LabelMap){
+        LOG(c.first);
+        for(auto&& o: c.second)
+        {
+            LOGf("%s", o.first);
+            LOGf("%s", o.second);
+        }
+    }
 }
 
 bool FigApp :: event(QEvent* ev)
@@ -305,7 +353,90 @@ bool FigApp :: event(QEvent* ev)
 
 void FigApp :: restore_defaults()
 {
-    LOG("restore_defaults");
+    for(auto&& category: *m_pSchema)
+    {
+        shared_ptr<Meta> sp;
+        try{
+            sp = category.as<shared_ptr<Meta>>();
+        }catch(...){
+            continue;
+        } // not a category
+        //auto group = m_pWindow->findChild<QFormLayout*>(category.key.c_str());
+        auto& option_map = m_LabelMap[category.key];
+        LOG(category.key);
+        for(auto&& op: *sp)
+        {
+            shared_ptr<Meta> m;
+            try{
+                m = op.as<shared_ptr<Meta>>();
+            }catch(...){
+                continue;
+            }
+            LOG(string() + "\t" + op.key);
+            QWidget* w = option_map[op.key]->buddy();
+            bool done = false;
+            try{
+                auto slider = dynamic_cast<QSlider*>(w);
+                done = true;
+            }catch(bad_cast&){
+            }
+            if(not done){
+                try{
+                    auto combobox = dynamic_cast<QComboBox*>(w);
+                    done = true;
+                }catch(bad_cast&){
+                }
+            }
+            if(not done){
+                try{
+                    auto le = dynamic_cast<QLineEdit*>(w);
+                    done = true;
+                }catch(bad_cast&){
+                }
+            }
+
+            //rows->dumpObjectTree();
+            //LOGf("%s", le);
+            //LOG("---");
+            //auto rows = group->findChild<QVBoxLayout*>(op);
+            //cout << rows.count() << endl;
+            //for(int i=0;i<rows->rowCount();++i)
+            //for(int i=0;i<rows.count();++i)
+            //{
+                //LOG("---")
+                //rows.at(i)->dumpObjectTree();
+                ////auto le = rows.at(i)->findChild<QLineEdit*>();
+                ////auto e = text.at(i);
+                ////auto typs = le->property("type").toString().toStdString();
+                ////auto typs = rows->getItem(i)->property("type").toString().toStdString();
+                //cout << i << endl;
+                
+                //if(typs=="string")
+                //{
+                //    //LOG(as_string(m,".default"));
+                //    //text.at(i)->setText(as_string(m,".default").c_str());
+                //}
+            //}
+            
+            //try{
+            //    sp->set(op.key, m->at<string>(".default"));
+            //}catch(...){
+            //    try{
+            //        sp->set(op.key, m->at<int>(".default"));
+            //    }catch(...){
+            //        try{
+            //            sp->set(op.key, m->at<double>(".default"));
+            //        }catch(...){
+            //            try{
+            //                sp->set(op.key, m->at<bool>(".default"));
+            //            }catch(...){
+            //                // ???
+            //            }
+            //        }
+            //    }
+            //}
+        }
+    }
 }
 
 void FigApp :: save_and_quit()

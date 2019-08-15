@@ -4,6 +4,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <memory>
+#include <map>
 #include <QSystemTrayIcon>
 #include "FigWindow.h"
 #include "kit/args/args.h"
@@ -43,6 +44,9 @@ class FigApp:
         
     private:
 
+        // category -> option -> label
+        std::map<std::string, std::map<std::string, QLabel*>> m_LabelMap;
+        
         Args m_Args;
         
         std::string m_FigAppPath;
