@@ -35,6 +35,9 @@ class FigApp:
         static std::string as_string(const MetaElement& me);
         void save();
         void load();
+        
+        template<class T>
+        int index_of_meta(std::shared_ptr<Meta>& m, T v);
 
     private Q_SLOTS:
         

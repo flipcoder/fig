@@ -345,6 +345,19 @@ void FigApp :: load()
     //}
 }
 
+template<class T>
+int FigApp :: index_of_meta(shared_ptr<Meta>& m, T v)
+{
+    int i = 0;
+    for(auto&& e: *m)
+    {
+        if(e.as<T>() == v)
+            return i;
+        ++i;
+    }
+    throw std::out_of_range("");
+}
+
 bool FigApp :: event(QEvent* ev)
 {
     return QApplication::event(ev);
@@ -397,23 +410,39 @@ void FigApp :: restore_defaults()
                 if(combobox)
                 {
                     LOG("combobox");
-                    //LOGf("%s", combobox->currentIndex());
+                    //auto idx = combobox->currentIndex();
+                    int defidx = 0;
+                    try{
+                        auto s = m->at<string>(".default");
+                        defidx = index_of_meta(m, s);
+                    }catch(...){
+                    }
+                    try{
+                        auto b = m->at<bool>(".default");
+                        defidx = index_of_meta(m, b);
+                    }catch(...){
+                    }
+                    try{
+                        int v = m->at<int>(".default");
+                        defidx = index_of_meta(m, v);
+                    }catch(...){
+                    }
+                    combobox->setCurrentIndex(defidx);
+
+                    //m->at<string>(".values")
                     done = true;
                 }
             }
             if(not done){
                 auto le = qobject_cast<QLineEdit*>(w);
                 if(le){
-                    LOG("lineedit");
                     le->setText(as_string(m, ".default").c_str());
-                    //LOGf("%s", le->text().toStdString());
                     done = true;
                 }
             }
             if(not done){
                 auto cb = qobject_cast<QCheckBox*>(w);
                 if(cb){
-                    LOG("checkbox");
                     cb->setChecked(m->at<bool>(".default",false));
                     LOGf("%s", cb->checkState());
                     done = true;
