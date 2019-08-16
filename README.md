@@ -1,7 +1,7 @@
 fig
 ===
 
-![fig](https://imgur.com/1R3ROsE.png)
+![fig](https://i.imgur.com/tDTALdh.png)
 
 Copyright (c) Grady O'Connell, 2016
 
