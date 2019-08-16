@@ -11,5 +11,5 @@ See LICENSE for license details.
 
 Here's how it looks in action:
 
-![fig](https://i.imgur.com/tDTALdh.png)
+![fig](https://imgur.com/N1YSO94.png)
 
