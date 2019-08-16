@@ -3,7 +3,7 @@ fig
 
 Build configuration dialogs using simple JSON
 
-Copyright (c) Grady O'Connell, 2016
+Copyright (c) Grady O'Connell, 2019
 
 Status: Just started. Not much here yet.
 
