@@ -147,7 +147,8 @@ void FigApp :: init()
             category_name = category.key;
         }
         
-        auto& option_map = m_LabelMap[category.key] = map<string,QLabel*>();
+        m_LabelMap[category.key] = map<string,QLabel*>();
+        auto& option_map = m_LabelMap[category.key];
         
         auto group = new QGroupBox(category_name.c_str());
         //group->setObjectName(category.key.c_str());
@@ -161,10 +162,10 @@ void FigApp :: init()
             }catch(...){continue;} // not an option
             if(not op->at<bool>(".visible", true))
                 continue; // option not visible
-            string option_name;
+            string option_name = option.key;
             try {
                 option_name = op->at<string>(".name");
-            }catch(...){continue;} // no name
+            }catch(...){}
             shared_ptr<Meta> ops;
             try{
                 ops = op->meta(".options");
@@ -222,8 +223,6 @@ void FigApp :: init()
                 for(auto&& val: *vals){
                     string v = as_string(val);
                     
-                    
-                    
                     if(not v.empty()){
                         QVariant qj = j;
                         if(ops)
@@ -274,8 +273,8 @@ void FigApp :: init()
                     }
                 }
                 slider->setValue(std::stoi(def));
-                auto label = new QLabel((option_name).c_str());
-                label->setObjectName(option_name.c_str());
+                auto label = new QLabel(option_name.c_str());
+                label->setObjectName(option.key.c_str());
                 label->setProperty("type", typ.c_str());
                 option_map[option.key] = label;
                 group_layout->addRow(label, slider);
@@ -289,7 +288,6 @@ void FigApp :: init()
                 //}
                 // field
                 auto le = new QLineEdit(def.c_str());
-                LOG(option.key);
                 auto label = new QLabel(option_name.c_str());
                 label->setObjectName(option.key.c_str());
                 label->setProperty("type", typ.c_str());
@@ -336,14 +334,15 @@ void FigApp :: save()
 void FigApp :: load()
 {
     LOG("load");
-    for(auto&& c: m_LabelMap){
-        LOG(c.first);
-        for(auto&& o: c.second)
-        {
-            LOGf("%s", o.first);
-            LOGf("%s", o.second);
-        }
-    }
+    //for(auto&& c: m_LabelMap){
+    //    LOG(c.first);
+    //    for(auto&& o: c.second)
+    //    {
+    //        LOGf("%s", o.first);
+    //        LOGf("%s", o.second);
+    //        o.second->buddy();
+    //    }
+    //}
 }
 
 bool FigApp :: event(QEvent* ev)
@@ -362,8 +361,13 @@ void FigApp :: restore_defaults()
             continue;
         } // not a category
         //auto group = m_pWindow->findChild<QFormLayout*>(category.key.c_str());
-        auto& option_map = m_LabelMap[category.key];
-        LOG(category.key);
+        try{
+            m_LabelMap.at(category.key);
+        }catch(...){
+            continue;
+        }
+        map<string,QLabel*>& option_map = m_LabelMap.at(category.key);
+        //LOGf("category.key: %s", category.key);
         for(auto&& op: *sp)
         {
             shared_ptr<Meta> m;
@@ -372,26 +376,41 @@ void FigApp :: restore_defaults()
             }catch(...){
                 continue;
             }
-            LOG(string() + "\t" + op.key);
-            QWidget* w = option_map[op.key]->buddy();
-            bool done = false;
+            //LOG(string() + "\t" + op.key);
+            
+            QLabel* label;
             try{
-                auto slider = dynamic_cast<QSlider*>(w);
+                label = option_map.at(op.key);
+            }catch(...){
+                continue;
+            }
+            auto w = label->buddy();
+            bool done = false;
+            auto slider = qobject_cast<QSlider*>(w);
+            if(slider){
+                LOGf("%s", slider->value());
                 done = true;
-            }catch(bad_cast&){
             }
             if(not done){
-                try{
-                    auto combobox = dynamic_cast<QComboBox*>(w);
+                auto combobox = qobject_cast<QComboBox*>(w);
+                if(combobox)
+                {
+                    //LOGf("%s", combobox->value());
                     done = true;
-                }catch(bad_cast&){
                 }
             }
             if(not done){
-                try{
-                    auto le = dynamic_cast<QLineEdit*>(w);
+                auto le = qobject_cast<QLineEdit*>(w);
+                if(le){
+                    LOGf("%s", le->text().toStdString());
                     done = true;
-                }catch(bad_cast&){
+                }
+            }
+            if(not done){
+                auto cb = qobject_cast<QCheckBox*>(w);
+                if(cb){
+                    //LOGf("%s", le->text());
+                    done = true;
                 }
             }
 
