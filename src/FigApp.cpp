@@ -328,7 +328,86 @@ void FigApp :: init()
 
 void FigApp :: save()
 {
-    
+    for(auto&& category: *m_pSchema)
+    {
+        shared_ptr<Meta> sp;
+        try{
+            sp = category.as<shared_ptr<Meta>>();
+        }catch(...){
+            continue;
+        } // not a category
+        try{
+            m_WidgetMap.at(category.key);
+        }catch(...){
+            continue;
+        }
+        map<string,QWidget*>& option_map = m_WidgetMap.at(category.key);
+        shared_ptr<Meta> setting;
+        try{
+            setting = m_pSettings->meta(category.key);
+        }catch(...){
+        }
+        if(not setting){
+            m_pSettings->set<shared_ptr<Meta>>(category.key, make_shared<Meta>()); // create
+            setting = m_pSettings->meta(category.key);
+        }
+        for(auto&& op: *sp)
+        {
+            shared_ptr<Meta> m;
+            try{
+                m = op.as<shared_ptr<Meta>>();
+            }catch(...){
+                continue;
+            }
+            
+            QWidget* w;
+            try{
+                w = option_map.at(op.key);
+            }catch(...){
+                continue;
+            }
+            bool cast = false;
+            auto slider = qobject_cast<QSlider*>(w);
+            if(slider){
+                //int v = m->at<int>(".default",0);
+                setting->set<int>(op.key, slider->value());
+                cast = true;
+            }
+            if(not cast){
+                auto combobox = qobject_cast<QComboBox*>(w);
+                if(combobox)
+                {
+                    auto typ = combobox->property("type");
+                    auto idx = combobox->currentIndex();
+                    if(typ=="string"){
+                        try{
+                            setting->set<string>(op.key, m->meta(".values")->at<string>(idx));
+                        }catch(boost::bad_any_cast&){}
+                    }else if(typ=="int"){
+                        try{
+                            setting->set<int>(op.key, m->meta(".values")->at<int>(idx));
+                        }catch(boost::bad_any_cast&){}
+                    }
+                    cast = true;
+                }
+            }
+            if(not cast){
+                auto le = qobject_cast<QLineEdit*>(w);
+                if(le){
+                    setting->set<string>(op.key, le->text().toStdString());
+                    cast = true;
+                }
+            }
+            if(not cast){
+                auto cb = qobject_cast<QCheckBox*>(w);
+                if(cb){
+                    setting->set<bool>(op.key, cb->checkState());
+                    cast = true;
+                }
+            }
+        }
+    }
+    m_pSettings->serialize();
 }
 
 void FigApp :: load()
@@ -398,19 +477,17 @@ void FigApp :: restore_defaults()
                 continue;
             }
             //auto w = label->buddy();
-            bool done = false;
+            bool cast = false;
             auto slider = qobject_cast<QSlider*>(w);
             if(slider){
-                LOG("slider");
-                LOGf("%s", slider->value());
-                done = true;
+                int v = m->at<int>(".default",0);
+                slider->setValue(v);
+                cast = true;
             }
-            if(not done){
+            if(not cast){
                 auto combobox = qobject_cast<QComboBox*>(w);
                 if(combobox)
                 {
-                    LOG("combobox");
-                    //auto idx = combobox->currentIndex();
                     int defidx = 0;
                     try{
                         auto s = m->at<string>(".default");
@@ -428,74 +505,29 @@ void FigApp :: restore_defaults()
                     }catch(...){
                     }
                     combobox->setCurrentIndex(defidx);
-
-                    //m->at<string>(".values")
-                    done = true;
+                    cast = true;
                 }
             }
-            if(not done){
+            if(not cast){
                 auto le = qobject_cast<QLineEdit*>(w);
                 if(le){
                     le->setText(as_string(m, ".default").c_str());
-                    done = true;
+                    cast = true;
                 }
             }
-            if(not done){
+            if(not cast){
                 auto cb = qobject_cast<QCheckBox*>(w);
                 if(cb){
                     cb->setChecked(m->at<bool>(".default",false));
-                    LOGf("%s", cb->checkState());
-                    done = true;
+                    cast = true;
                 }
             }
-
-            //rows->dumpObjectTree();
-            //LOGf("%s", le);
-            //LOG("---");
-            //auto rows = group->findChild<QVBoxLayout*>(op);
-            //cout << rows.count() << endl;
-            //for(int i=0;i<rows->rowCount();++i)
-            //for(int i=0;i<rows.count();++i)
-            //{
-                //LOG("---")
-                //rows.at(i)->dumpObjectTree();
-                ////auto le = rows.at(i)->findChild<QLineEdit*>();
-                ////auto e = text.at(i);
-                ////auto typs = le->property("type").toString().toStdString();
-                ////auto typs = rows->getItem(i)->property("type").toString().toStdString();
-                //cout << i << endl;
-                
-                //if(typs=="string")
-                //{
-                //    //LOG(as_string(m,".default"));
-                //    //text.at(i)->setText(as_string(m,".default").c_str());
-                //}
-            //}
-            
-            //try{
-            //    sp->set(op.key, m->at<string>(".default"));
-            //}catch(...){
-            //    try{
-            //        sp->set(op.key, m->at<int>(".default"));
-            //    }catch(...){
-            //        try{
-            //            sp->set(op.key, m->at<double>(".default"));
-            //        }catch(...){
-            //            try{
-            //                sp->set(op.key, m->at<bool>(".default"));
-            //            }catch(...){
-            //                // ???
-            //            }
-            //        }
-            //    }
-            //}
         }
     }
 }
 
 void FigApp :: save_and_quit()
 {
-    // TODO: save
     LOG("save_and_quit");
     save();
     QApplication::quit();
