@@ -147,8 +147,8 @@ void FigApp :: init()
             category_name = category.key;
         }
         
-        m_LabelMap[category.key] = map<string,QLabel*>();
-        auto& option_map = m_LabelMap[category.key];
+        m_WidgetMap[category.key] = map<string,QWidget*>();
+        auto& option_map = m_WidgetMap[category.key];
         
         auto group = new QGroupBox(category_name.c_str());
         //group->setObjectName(category.key.c_str());
@@ -209,9 +209,9 @@ void FigApp :: init()
             {
                 auto cb = new QCheckBox;
                 auto label = new QLabel(option_name.c_str());
-                label->setObjectName(option.key.c_str());
-                label->setProperty("type", typ.c_str());
-                option_map[option.key] = label;
+                cb->setObjectName(option.key.c_str());
+                cb->setProperty("type", typ.c_str());
+                option_map[option.key] = cb;
                 group_layout->addRow(label, cb);
             }
             else if(vals)
@@ -242,9 +242,9 @@ void FigApp :: init()
                     ++j;
                 }
                 auto label = new QLabel(option_name.c_str());
-                label->setObjectName(option.key.c_str());
-                label->setProperty("type", typ.c_str());
-                option_map[option.key] = label;
+                box->setObjectName(option.key.c_str());
+                box->setProperty("type", typ.c_str());
+                option_map[option.key] = box;
                 group_layout->addRow(label, box);
             }
             else if(op->has(".range"))
@@ -274,9 +274,9 @@ void FigApp :: init()
                 }
                 slider->setValue(std::stoi(def));
                 auto label = new QLabel(option_name.c_str());
-                label->setObjectName(option.key.c_str());
-                label->setProperty("type", typ.c_str());
-                option_map[option.key] = label;
+                slider->setObjectName(option.key.c_str());
+                slider->setProperty("type", typ.c_str());
+                option_map[option.key] = slider;
                 group_layout->addRow(label, slider);
             }
             else
@@ -289,9 +289,9 @@ void FigApp :: init()
                 // field
                 auto le = new QLineEdit(def.c_str());
                 auto label = new QLabel(option_name.c_str());
-                label->setObjectName(option.key.c_str());
-                label->setProperty("type", typ.c_str());
-                option_map[option.key] = label;
+                le->setObjectName(option.key.c_str());
+                le->setProperty("type", typ.c_str());
+                option_map[option.key] = le;
                 group_layout->addRow(
                     label,
                     le
@@ -334,7 +334,7 @@ void FigApp :: save()
 void FigApp :: load()
 {
     LOG("load");
-    //for(auto&& c: m_LabelMap){
+    //for(auto&& c: m_WidgetMap){
     //    LOG(c.first);
     //    for(auto&& o: c.second)
     //    {
@@ -362,11 +362,11 @@ void FigApp :: restore_defaults()
         } // not a category
         //auto group = m_pWindow->findChild<QFormLayout*>(category.key.c_str());
         try{
-            m_LabelMap.at(category.key);
+            m_WidgetMap.at(category.key);
         }catch(...){
             continue;
         }
-        map<string,QLabel*>& option_map = m_LabelMap.at(category.key);
+        map<string,QWidget*>& option_map = m_WidgetMap.at(category.key);
         //LOGf("category.key: %s", category.key);
         for(auto&& op: *sp)
         {
@@ -378,16 +378,17 @@ void FigApp :: restore_defaults()
             }
             //LOG(string() + "\t" + op.key);
             
-            QLabel* label;
+            QWidget* w;
             try{
-                label = option_map.at(op.key);
+                w = option_map.at(op.key);
             }catch(...){
                 continue;
             }
-            auto w = label->buddy();
+            //auto w = label->buddy();
             bool done = false;
             auto slider = qobject_cast<QSlider*>(w);
             if(slider){
+                LOG("slider");
                 LOGf("%s", slider->value());
                 done = true;
             }
@@ -395,21 +396,26 @@ void FigApp :: restore_defaults()
                 auto combobox = qobject_cast<QComboBox*>(w);
                 if(combobox)
                 {
-                    //LOGf("%s", combobox->value());
+                    LOG("combobox");
+                    //LOGf("%s", combobox->currentIndex());
                     done = true;
                 }
             }
             if(not done){
                 auto le = qobject_cast<QLineEdit*>(w);
                 if(le){
-                    LOGf("%s", le->text().toStdString());
+                    LOG("lineedit");
+                    le->setText(as_string(m, ".default").c_str());
+                    //LOGf("%s", le->text().toStdString());
                     done = true;
                 }
             }
             if(not done){
                 auto cb = qobject_cast<QCheckBox*>(w);
                 if(cb){
-                    //LOGf("%s", le->text());
+                    LOG("checkbox");
+                    cb->setChecked(m->at<bool>(".default",false));
+                    LOGf("%s", cb->checkState());
                     done = true;
                 }
             }

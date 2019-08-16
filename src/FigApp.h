@@ -45,7 +45,7 @@ class FigApp:
     private:
 
         // category -> option -> label
-        std::map<std::string, std::map<std::string, QLabel*>> m_LabelMap;
+        std::map<std::string, std::map<std::string, QWidget*>> m_WidgetMap;
         
         Args m_Args;
         
