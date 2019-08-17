@@ -1,0 +1,54 @@
+{
+    "video": {
+        ".name": "Video",
+        "resolution": {
+            ".name": "Display Resolution",
+            ".default": "1920x1080"
+        },
+        "windowed": {
+            ".name": "Window",
+            ".description": "Run in windowed or fullscreen mode",
+            ".values": [ "false", "true", "borderless" ],
+            ".options": [
+                "Fullscreen",
+                "Windowed",
+                "Borderless"
+            ]
+        },
+        "AA": {
+            ".name": "Anti-Aliasing",
+            ".values": [ 1, 2, 4, 8, 16 ],
+            ".description": "Smooths sharp edges"
+        },
+        "AF": {
+            ".name": "Anisotropic Filtering",
+            ".values": [ 1, 2, 4, 8, 16],
+            ".description": "Improves texture quality"
+        },
+        "vsync": {
+            ".name": "Vertical Sync",
+            ".description": "Reduces tearing but may lower frame rate",
+            ".values": [ false, true ]
+        }
+    },
+
+    "audio": {
+        ".name": "Audio",
+        "volume": {
+            ".name": "Volume",
+            ".step": 5,
+            ".range": [0, 100],
+            ".default": 100,
+            ".suffix": "%"
+        },
+        "frames": {
+            ".name": "Frames",
+            ".type": "int",
+            ".default": 512
+        }
+    },
+
+    ".header": "fig",
+    ".footer": "Visit: <a href=\"http://github.com/flipcoder/fig\">http://github.com/flipcoder/fig</a>"
+}
+
