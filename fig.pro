@@ -11,8 +11,6 @@ LIBS += -L/usr/local/lib \
     -lboost_filesystem \
     -ljsoncpp \
 
-FORMS += src/ui/*.ui
-UI_DIR += src/ui/
 MOC_DIR = moc
 DEFINES += QT_DLL META_STORAGE=std::shared_ptr META_THIS=std::enable_shared_from_this
 CONFIG  += qt warn_on release c++11 no_keywords

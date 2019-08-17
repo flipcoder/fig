@@ -2,7 +2,6 @@
 #define FIGWINDOW_H_Q0YWXBJS
 
 #include <QDialog>
-#include "ui_fig.h"
 #include "kit/meta/meta.h"
 
 class FigApp;
