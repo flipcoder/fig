@@ -1,5 +1,4 @@
 bin/fig
-lib/
 moc/
 obj/
 .qmake.stash

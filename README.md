@@ -11,6 +11,12 @@ Here's how it looks in action:
 
 ## Getting Started
 
+First, get the dependencies:
+
+```
+git submodule update --init --recursive
+```
+
 Build with Qt qmake and then run make:
 
 ```
