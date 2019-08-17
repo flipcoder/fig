@@ -330,8 +330,9 @@ void FigApp :: init()
     m_pWindow->show();
 }
 
-void FigApp :: save()
+bool FigApp :: save()
 {
+    bool fail = false;
     for(auto&& category: *m_pSchema)
     {
         shared_ptr<Meta> sp;
@@ -403,7 +404,20 @@ void FigApp :: save()
             if(not cast){
                 auto le = qobject_cast<QLineEdit*>(w);
                 if(le){
-                    setting->set<string>(op.key, le->text().toStdString());
+                    auto typ = le->property("type");
+                    if(typ=="string")
+                        setting->set<string>(op.key, le->text().toStdString());
+                    else if(typ=="int"){
+                        try{
+                            setting->set<int>(op.key, stoi(le->text().toStdString()));
+                        }catch(...){
+                            QMessageBox::critical(m_pWindow.get(), "Error",
+                                (m->at<string>(".name", op.key) + " needs to be an integer.").c_str()
+                            );
+                            fail = true;
+                            break;
+                        }
+                    }
                     cast = true;
                 }
             }
@@ -416,21 +430,90 @@ void FigApp :: save()
             }
         }
     }
-    m_pSettings->serialize();
+    if(not fail)
+        m_pSettings->serialize();
+    return not fail;
 }
 
 void FigApp :: load()
 {
-    LOG("load");
-    //for(auto&& c: m_WidgetMap){
-    //    LOG(c.first);
-    //    for(auto&& o: c.second)
-    //    {
-    //        LOGf("%s", o.first);
-    //        LOGf("%s", o.second);
-    //        o.second->buddy();
-    //    }
-    //}
+    for(auto&& category: *m_pSettings)
+    {
+        shared_ptr<Meta> sp;
+        try{
+            sp = category.as<shared_ptr<Meta>>();
+        }catch(...){
+            continue;
+        } // not a category
+        try{
+            m_WidgetMap.at(category.key);
+        }catch(...){
+            continue;
+        }
+        map<string,QWidget*>& option_map = m_WidgetMap.at(category.key);
+        for(auto&& op: *sp)
+        {
+            shared_ptr<Meta> m;
+            try{
+                m = m_pSchema->meta(category.key)->meta(op.key);
+            }catch(...){
+                continue;
+            }
+            //LOG(string() + "\t" + op.key);
+            
+            QWidget* w;
+            try{
+                w = option_map.at(op.key);
+            }catch(...){
+                continue;
+            }
+            //auto w = label->buddy();
+            bool cast = false;
+            auto slider = qobject_cast<QSlider*>(w);
+            if(slider){
+                slider->setValue(op.as<int>());
+                cast = true;
+            }
+            if(not cast){
+                auto combobox = qobject_cast<QComboBox*>(w);
+                if(combobox)
+                {
+                    int idx = 0;
+                    try{
+                        auto s = op.as<string>();
+                        idx = index_of_meta(m, s);
+                    }catch(...){
+                    }
+                    try{
+                        auto b = op.as<bool>();
+                        idx = index_of_meta(m, b);
+                    }catch(...){
+                    }
+                    try{
+                        int v = op.as<int>();
+                        idx = index_of_meta(m, v);
+                    }catch(...){
+                    }
+                    combobox->setCurrentIndex(idx);
+                    cast = true;
+                }
+            }
+            if(not cast){
+                auto le = qobject_cast<QLineEdit*>(w);
+                if(le){
+                    le->setText(as_string(op).c_str());
+                    cast = true;
+                }
+            }
+            if(not cast){
+                auto cb = qobject_cast<QCheckBox*>(w);
+                if(cb){
+                    cb->setChecked(op.as<bool>());
+                    cast = true;
+                }
+            }
+        }
+    }
 }
 
 template<class T>
@@ -538,8 +621,8 @@ void FigApp :: restore_defaults()
 void FigApp :: save_and_quit()
 {
     LOG("save_and_quit");
-    save();
-    QApplication::quit();
+    if(save())
+        QApplication::quit();
 }
     
 void FigApp :: quit()
