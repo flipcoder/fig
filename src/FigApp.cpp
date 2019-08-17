@@ -178,7 +178,11 @@ void FigApp :: init()
             MetaType::ID typid = MetaType::ID::STRING;
             try {
                 typid = op->type_id(".default");
-            }catch(...){}
+            }catch(...){
+                try {
+                    typid = op->meta(".values")->type_id(0);
+                }catch(...){}
+            }
             string typ;
             if(typid==MetaType::ID::STRING)
                 typ="string";
@@ -387,7 +391,12 @@ void FigApp :: save()
                         try{
                             setting->set<int>(op.key, m->meta(".values")->at<int>(idx));
                         }catch(boost::bad_any_cast&){}
+                    }else if(typ=="bool"){
+                        try{
+                            setting->set<bool>(op.key, m->meta(".values")->at<bool>(idx));
+                        }catch(boost::bad_any_cast&){}
                     }
+
                     cast = true;
                 }
             }
