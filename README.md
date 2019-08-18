@@ -197,6 +197,7 @@ To customize the dialog further, use these options.  They are all optional.
 
 ```
 {
+    ".title": "App Settings",
     ".launch": "./my_app",
     ".header": "App Name",
     ".icon": "logo.png",

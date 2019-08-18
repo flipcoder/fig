@@ -19,8 +19,6 @@ FigApp :: FigApp(int& argc, char* argv[]):
     
     m_SchemaFn = m_Args.value_or("schema", "settings.schema.json");
     
-    m_Title = m_Args.value_or("title", "Settings");
-
     try{
         m_pSettings = make_shared<Meta>(m_SettingsFn);
     }catch(Error& e){
@@ -37,6 +35,10 @@ FigApp :: FigApp(int& argc, char* argv[]):
         quit();
         goto return_ctor;
     }
+    
+    m_Title = m_Args.value_or("title", "Settings");
+    if(m_pSchema->has(".title"))
+        m_Title = m_pSchema->at<string>(".title");
  
     init();
     m_Success = true;
