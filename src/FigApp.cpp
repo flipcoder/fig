@@ -652,8 +652,13 @@ void FigApp :: restore_defaults()
 void FigApp :: save_and_quit()
 {
     if(save()){
-        if(m_pSchema->has(".launch"))
-            QProcess::startDetached(m_pSchema->at<string>(".launch").c_str());
+        if(m_pSchema->has(".launch")){
+            auto launch = m_pSchema->at<string>(".launch");
+            if(!QProcess::startDetached(launch.c_str())){
+                string e = string("Unable to launch \"") + launch + "\".";
+                QMessageBox::critical(m_pWindow.get(), "Error", e.c_str());
+            }
+        }
         QApplication::quit();
     }
 }
