@@ -1,7 +1,7 @@
 fig
 ===
 
-Build configuration dialogs using simple JSON
+Build fully-functional configuration dialogs using simple JSON
 
 Copyright (c) Grady O'Connell, 2019
 
@@ -11,7 +11,7 @@ Here's how it looks in action:
 
 ## Getting Started
 
-First, get the dependencies:
+After you've cloned the repo, get the dependencies:
 
 ```
 git submodule update --init --recursive
@@ -31,11 +31,34 @@ The file names should be:
 - settings.json (this is where it saves, should contain "{}" at first)
 - settings.schema.json (your schema here)
 
+## How it Works
+
+Fig is a program that you can bundle with your application, meaning all you need to do is modify
+settings.schema.json, and from there, your application can run fig as a configuration dialog,
+and the generated settings file called settings.json with your user's
+settings will be available to your application to make sense of (it's just json).
+
+You may prefer your users to run fig separately from your main program, or
+have it act as a launcher, calling your main program when the
+user hits Ok and saves the settings (Read *Schema / Application Info* in the readme).
+The other option is to call fig from within your application, and when the process closes,
+have your application read settings.json to get the new information.
+
+## Features
+
+- Supports text fields, comboboxes, checkboxes, and sliders
+- Supports string, int, double, and bool types
+- Type-checking
+- Restore defaults
+- App logos
+- Headers and footer text and links
+- Launch an application upon saving
+
 ## Schema
 
 ### Categories
 
-In the upper level of the json, put your categories, like this:
+In the upper level of the settings.schema.json, put your categories, like this:
 
 ```
 {
@@ -96,11 +119,13 @@ Add default values with ".default":
 }
 ```
 
-Now the text field is filled in by default.
+Now the text field is filled in by default.  The default determines the value's type.
+
+Strings (default), ints, doubles are supported.
 
 ### Drop-down Lists
 
-To creata a drop-down list with a set of values, use ".values":
+To create a drop-down list with a set of values, use ".values":
 
 ```
 {
@@ -133,14 +158,14 @@ Here's an example of that:
 
 ### Checkbox
 
-When values are true and false boolean values, the resulting widget is a single checkbox.
+When the default value is a boolean, then the widget becomes a checkbox.
 
 ```
 {
     "video":{
         "vsync": {
             ".name": "Vertical Sync",
-            ".values": [ false, true ]
+            ".default": false
         }
     }
 }
@@ -164,18 +189,33 @@ The following code creates a value slider:
 }
 ```
 
-### Application Info
+Suffix is optional.
 
-To customize the dialog further, use these options:
+### Application Settings
+
+To customize the dialog further, use these options.  They are all optional.
 
 ```
 {
+    ".launch": "./my_app",
     ".header": "App Name",
     ".icon": "logo.png",
     ".icon-width": 64,
     ".icon-height": 64,
-    ".footer": "Visit our website at : <a href=\"http://website.com\">website.com</a>"
+    ".footer": "Visit our website at : <a href=\"http://website.com\">website.com</a>",
 }
 ```
 
+The launch instruction is the script that gets called when the user hits Ok (after it saves).
+
+Your app should then read the resultant settings.json file and use a json parser to extract the settings.
+
+## Questions or Feature Requests?
+
+If you have any questions or want to discuss this project, I'm always open for communication.
+
+If you have a feature or pull request, let me know and I may have some tips on how to go
+about implementing it, even if I don't have the time to do so myself.
+
+If you find this useful, give it a star on github. Thanks!
 

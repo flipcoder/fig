@@ -28,7 +28,7 @@
         "vsync": {
             ".name": "Vertical Sync",
             ".description": "Reduces tearing but may lower frame rate",
-            ".values": [ false, true ]
+            ".default": false
         }
     },
 
@@ -43,7 +43,6 @@
         },
         "frames": {
             ".name": "Frames",
-            ".type": "int",
             ".default": 512
         }
     },

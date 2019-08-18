@@ -183,6 +183,7 @@ void FigApp :: init()
                     typid = op->meta(".values")->type_id(0);
                 }catch(...){}
             }
+            bool bools = false;
             string typ;
             if(typid==MetaType::ID::STRING)
                 typ="string";
@@ -190,11 +191,12 @@ void FigApp :: init()
                 typ="int";
             else if(typid==MetaType::ID::REAL)
                 typ="double";
-            else if(typid==MetaType::ID::BOOL)
+            else if(typid==MetaType::ID::BOOL){
                 typ="bool";
+                bools=true;
+            }
 
             // check if values are bools
-            bool bools = false;
             if(vals)
             {
                 int i;
@@ -396,7 +398,12 @@ bool FigApp :: save()
                         try{
                             setting->set<bool>(op.key, m->meta(".values")->at<bool>(idx));
                         }catch(boost::bad_any_cast&){}
+                    }else if(typ=="double"){
+                        try{
+                            setting->set<double>(op.key, m->meta(".values")->at<double>(idx));
+                        }catch(boost::bad_any_cast&){}
                     }
+
 
                     cast = true;
                 }
@@ -417,7 +424,19 @@ bool FigApp :: save()
                             fail = true;
                             break;
                         }
+                    }else if(typ=="double"){
+                        try{
+                            setting->set<double>(op.key, stod(le->text().toStdString()));
+                        }catch(...){
+                            QMessageBox::critical(m_pWindow.get(), "Error",
+                                (m->at<string>(".name", op.key) + " needs to be a number.").c_str()
+                            );
+                            fail = true;
+                            break;
+                        }
                     }
+
+                    
                     cast = true;
                 }
             }
@@ -491,6 +510,11 @@ void FigApp :: load()
                     }
                     try{
                         int v = op.as<int>();
+                        idx = index_of_meta(m, v);
+                    }catch(...){
+                    }
+                    try{
+                        double v = op.as<double>();
                         idx = index_of_meta(m, v);
                     }catch(...){
                     }
@@ -596,6 +620,11 @@ void FigApp :: restore_defaults()
                         defidx = index_of_meta(m, v);
                     }catch(...){
                     }
+                    try{
+                        auto v = m->at<double>(".default");
+                        defidx = index_of_meta(m, v);
+                    }catch(...){
+                    }
                     combobox->setCurrentIndex(defidx);
                     cast = true;
                 }
@@ -620,8 +649,11 @@ void FigApp :: restore_defaults()
 
 void FigApp :: save_and_quit()
 {
-    if(save())
+    if(save()){
+        if(m_pSchema->has(".launch"))
+            QProcess::startDetached(m_pSchema->at<string>(".launch").c_str());
         QApplication::quit();
+    }
 }
     
 void FigApp :: quit()
