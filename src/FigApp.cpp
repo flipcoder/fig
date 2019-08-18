@@ -620,7 +620,6 @@ void FigApp :: restore_defaults()
 
 void FigApp :: save_and_quit()
 {
-    LOG("save_and_quit");
     if(save())
         QApplication::quit();
 }
