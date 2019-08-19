@@ -24,12 +24,16 @@ qmake
 make
 ```
 
-Fig looks for the settings files in the bin directory.
+Fig looks for the schema file in the program's directory.  The default filename is "settings.schema.json".
 
-The file names should be:
+You can load a different schema by passing it in:
 
-- settings.json (this is where it saves, should contain "{}" at first)
-- settings.schema.json (your schema here)
+```
+./fig schema.json
+```
+
+The default save path is settings.json in the program's directory.
+See *Schema / Application Info* on how to change where it saves.
 
 ## How it Works
 
@@ -204,6 +208,7 @@ To customize the dialog further, use these options.  They are all optional.
     ".icon-width": 64,
     ".icon-height": 64,
     ".footer": "Visit our website at : <a href=\"http://website.com\">website.com</a>",
+    ".settings": "settings.json"
 }
 ```
 

@@ -9,7 +9,6 @@
 #include "FigWindow.h"
 #include "kit/args/args.h"
 #include "kit/meta/meta.h"
-#include "kit/meta/schema.h"
 
 class FigApp:
     public QApplication
@@ -63,8 +62,8 @@ class FigApp:
         
         std::string m_FigAppPath;
         
-        std::string m_SettingsFn;
-        std::string m_SchemaFn;
+        std::string m_SettingsFn = "settings.json";
+        std::string m_SchemaFn = "settings.schema.json";
         std::shared_ptr<Meta> m_pSettings;
         std::shared_ptr<Meta> m_pSchema;
         std::string m_Title;

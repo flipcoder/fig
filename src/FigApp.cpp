@@ -1,41 +1,58 @@
 #include "FigApp.h"
 #include "FigWindow.h"
 #include <vector>
+#include <fstream>
 #include "kit/kit.h"
 #include "kit/log/log.h"
 #include <QDialogButtonBox>
+#include <boost/filesystem.hpp>
 using namespace std;
 using kit::make_unique;
+namespace fs = boost::filesystem;
+using path = boost::filesystem::path;
 
 FigApp :: FigApp(int& argc, char* argv[]):
     QApplication(argc,argv),
     m_Args(argc, (const char**)argv),
     m_FigAppPath(argv[0])
 {
+    path appPath = path(m_FigAppPath).parent_path();
+    
     if(m_Args.size()>0)
-        m_SettingsFn = m_Args.get(m_Args.size()-1);
+        m_SchemaFn = m_Args.get(m_Args.size()-1);
     else
-        m_SettingsFn = "settings.json";
-    
-    m_SchemaFn = m_Args.value_or("schema", "settings.schema.json");
-    
-    try{
-        m_pSettings = make_shared<Meta>(m_SettingsFn);
-    }catch(Error& e){
-        QMessageBox::critical(m_pWindow.get(), "Error", "Could not load settings file.");
-        fail();
-        goto return_ctor;
-    }
+        m_SchemaFn = (appPath / m_SchemaFn).string();
+
+    path schemaPath = path(m_SchemaFn).parent_path();
     
     try{
         m_pSchema = make_shared<Meta>(m_SchemaFn);
-        //m_pSchema = make_shared<Schema>(make_shared<Meta>(m_SchemaFn));
     }catch(Error& e){
         QMessageBox::critical(m_pWindow.get(), "Error", "Could not load schema file.");
         fail();
         goto return_ctor;
     }
+
+    // use .settings path or default to same path as schema
+    if(m_pSchema->has(".settings"))
+        m_SettingsFn = m_pSchema->at<string>(".settings");
+    else
+        m_SettingsFn = (schemaPath / m_SettingsFn).string();
     
+    if(fs::exists(m_SettingsFn))
+    {
+        try{
+            m_pSettings = make_shared<Meta>(m_SettingsFn);
+        }catch(...){
+            QMessageBox::critical(m_pWindow.get(), "Error",
+                "Unable to load settings.  The file may be corrupt."
+            );
+            m_pSettings = make_shared<Meta>();
+        }
+    }
+    else
+        m_pSettings = make_shared<Meta>();
+        
     m_Title = m_Args.value_or("title", "Settings");
     if(m_pSchema->has(".title"))
         m_Title = m_pSchema->at<string>(".title");
@@ -452,7 +469,16 @@ bool FigApp :: save()
         }
     }
     if(not fail)
-        m_pSettings->serialize();
+    {
+        try{
+            m_pSettings->serialize(m_SettingsFn);
+        }catch(...){
+            QMessageBox::critical(m_pWindow.get(), "Error",
+                "Unable to save settings."
+            );
+            fail = true;
+        }
+    }
     return not fail;
 }
 
