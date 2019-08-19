@@ -23,7 +23,7 @@ FigApp :: FigApp(int& argc, char* argv[]):
         m_pSettings = make_shared<Meta>(m_SettingsFn);
     }catch(Error& e){
         QMessageBox::critical(m_pWindow.get(), "Error", "Could not load settings file.");
-        quit();
+        fail();
         goto return_ctor;
     }
     
@@ -32,7 +32,7 @@ FigApp :: FigApp(int& argc, char* argv[]):
         //m_pSchema = make_shared<Schema>(make_shared<Meta>(m_SchemaFn));
     }catch(Error& e){
         QMessageBox::critical(m_pWindow.get(), "Error", "Could not load schema file.");
-        quit();
+        fail();
         goto return_ctor;
     }
     
@@ -40,8 +40,13 @@ FigApp :: FigApp(int& argc, char* argv[]):
     if(m_pSchema->has(".title"))
         m_Title = m_pSchema->at<string>(".title");
  
-    init();
-    m_Success = true;
+    if(!init()){
+        QMessageBox::critical(m_pWindow.get(), "Error", "Failed to initialize schema.");
+        fail();
+        goto return_ctor;
+    }
+        
+    m_ReturnCode = RC_SUCCESS; // ctor passed, tell main() we didn't fail
 
     return_ctor: {}
 }
@@ -93,19 +98,12 @@ string FigApp :: as_string(const MetaElement& me)
 
 }
 
-void FigApp :: init()
+bool FigApp :: init()
 {
     m_pWindow = make_unique<FigWindow>(this);
     
-    //QPushButton *button1 = new QPushButton("One");
-    //QPushButton *button2 = new QPushButton("Two");
     QVBoxLayout* layout = new QVBoxLayout;
     //layout->setObjectName("layout");
-    //auto widget = new QWidget();
-    //layout->addWidget(button1);
-    //layout->addWidget(button2);
-    //m_pWindow->setLayout(layout);
-    //m_pWindow->setCentralWidget(widget);
 
     if(m_pSchema->has(".icon")){
         auto icon = m_pSchema->at<string>(".icon");
@@ -225,8 +223,7 @@ void FigApp :: init()
             else if(vals)
             {
                 auto box = new QComboBox;
-                box->setObjectName("box");
-                // if values exist, use a combobox
+                //box->setObjectName("box");
                 int j=0;
                 for(auto&& val: *vals){
                     string v = as_string(val);
@@ -329,9 +326,12 @@ void FigApp :: init()
     m_pWindow->setLayout(layout);
     m_pWindow->setWindowTitle(m_Title.c_str());
 
-    load();
+    if(!load())
+        return false;
     
     m_pWindow->show();
+
+    return true;
 }
 
 bool FigApp :: save()
@@ -456,7 +456,7 @@ bool FigApp :: save()
     return not fail;
 }
 
-void FigApp :: load()
+bool FigApp :: load()
 {
     for(auto&& category: *m_pSettings)
     {
@@ -540,6 +540,8 @@ void FigApp :: load()
             }
         }
     }
+    
+    return true;
 }
 
 template<class T>
@@ -652,19 +654,33 @@ void FigApp :: restore_defaults()
 void FigApp :: save_and_quit()
 {
     if(save()){
+        m_ReturnCode = RC_SUCCESS;
         if(m_pSchema->has(".launch")){
             auto launch = m_pSchema->at<string>(".launch");
             if(!QProcess::startDetached(launch.c_str())){
                 string e = string("Unable to launch \"") + launch + "\".";
                 QMessageBox::critical(m_pWindow.get(), "Error", e.c_str());
+                m_ReturnCode = RC_ERROR;
             }
         }
+        QApplication::quit();
+    }
+    else{
+        // failed save() calls show dialog
+        m_ReturnCode = RC_ERROR;
         QApplication::quit();
     }
 }
     
 void FigApp :: quit()
 {
+    m_ReturnCode = RC_CLOSE;
+    QApplication::quit();
+}
+
+void FigApp :: fail()
+{
+    m_ReturnCode = RC_ERROR;
     QApplication::quit();
 }
 

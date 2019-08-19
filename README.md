@@ -211,12 +211,19 @@ The launch instruction is the script that gets called when the user hits Ok (aft
 
 Your app should then read the resultant settings.json file and use a json parser to extract the settings.
 
-## Questions or Feature Requests?
+## Return Codes
+
+Fig gives different return codes based on how the dialog was closed.
+
+- 0: User pressed "Ok" and settings were saved
+- 1: Dialog window closed or "Cancel" button hit
+- 2: Error: Most likely fig failed to load schema
+
+## Questions, Bugs, Feature Requests?
 
 If you have any questions or want to discuss this project, I'm always open for communication.
 
-If you have a feature or pull request, let me know and I may have some tips on how to go
-about implementing it, even if I don't have the time to do so myself.
+Post bugs and feature requests to github issues.  This is a new project so you might run into limitations or issues.
 
 If you find this useful, give it a star on github. Thanks!
 

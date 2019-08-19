@@ -28,16 +28,25 @@ class FigApp:
         virtual ~FigApp();
         
         bool event(QEvent* event) override;
-        bool failed() const { return not m_Success; }
-        void init();
+        void return_code(int r) { m_ReturnCode=r; } // called from FigApp on window close
+        int return_code() const { return m_ReturnCode; }
+        bool failed() const { return m_ReturnCode != 0; }
+        bool init();
+        void fail();
 
         static std::string as_string(std::shared_ptr<Meta> m, std::string key);
         static std::string as_string(const MetaElement& me);
         bool save();
-        void load();
+        bool load();
         
         template<class T>
         int index_of_meta(std::shared_ptr<Meta>& m, T v);
+
+        enum eReturnCodes {
+            RC_SUCCESS = 0,
+            RC_CLOSE = 1,
+            RC_ERROR = 2
+        };
 
     private Q_SLOTS:
         
@@ -62,7 +71,9 @@ class FigApp:
         
         std::unique_ptr<FigWindow> m_pWindow;
 
-        bool m_Success = false;
+        // this return code is both the ctor result (checked in main)
+        // and the final app return code
+        int m_ReturnCode = RC_ERROR; // start on error, since ctor can fail
 };
 
 #endif
